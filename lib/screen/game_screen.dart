@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'dart:math';
 import 'package:hand_cric/main.dart';
 import 'package:hand_cric/widgets/waiting_indicator.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,9 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   List<Color> _buttonColors = List<Color>.filled(6, Colors.blue);
-  String clickedValue = "-";
+  int clickedValue = 0;
+  late int botValue, currentScore = 0;
+  Widget _currentWidget = const CircularProgressIndicator();
 
   void _changeButtonColor(int index) {
     setState(() {
@@ -23,7 +26,22 @@ class _GameScreenState extends State<GameScreen> {
       _buttonColors = List<Color>.filled(6, Colors.blue);
       // Set the clicked button to yellow
       _buttonColors[index] = Colors.yellow;
-      clickedValue = "${index + 1}";
+      clickedValue = index + 1;
+    });
+  }
+
+  void _updateWidget() {
+    var random = Random();
+    botValue = random.nextInt(6) + 1;
+    setState(() {
+      _currentWidget = Text(
+        '${botValue}',
+        style: TextStyle(fontSize: 24, color: Colors.green),
+      );
+      currentScore = (botValue == clickedValue)
+          ? currentScore
+          : currentScore + clickedValue;
+      // ResetWidgets();
     });
   }
 
@@ -62,15 +80,15 @@ class _GameScreenState extends State<GameScreen> {
               const SizedBox(
                 height: 20,
               ),
+              _currentWidget,
               // const CircularProgressIndicator(),
-              Provider.of<AppState>(context, listen: false).updateWidget(),
-
+              // Provider.of<AppState>(context, listen: false).updateWidget(),
               const SizedBox(height: 25),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(
-                    "21",
+                    "$currentScore",
                     style: TextStyle(fontSize: 72, color: Colors.grey),
                   ),
                   // Text("+4", style: TextStyle(fontSize: 56, color: Colors.grey))
@@ -79,13 +97,12 @@ class _GameScreenState extends State<GameScreen> {
               const SizedBox(height: 25),
               Center(
                   child: Text(
-                clickedValue,
+                "${clickedValue}",
                 style: const TextStyle(fontSize: 32, color: Colors.grey),
               )),
             ]),
             const Spacer(),
             // ElevatedButton(onPressed: () => {}, child: Text("Hey there")),
-
             ButtonGrid(context)
           ],
         ),
@@ -107,11 +124,15 @@ class _GameScreenState extends State<GameScreen> {
             Text("World")
           ],
         ),
-        const WaitingIndicator(),
+        WaitingIndicator(
+          onUpdate: _updateWidget,
+        ),
+        SizedBox(
+          height: 4,
+        ),
         Center(
           child: Container(
               width: 450,
-
               // padding: const EdgeInsets.all(15.5),
               child: GridView.count(
                 shrinkWrap: true,

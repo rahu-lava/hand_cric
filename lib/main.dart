@@ -44,7 +44,7 @@ class AppState extends ChangeNotifier {
   bool get autoPlay => _autoPlay;
   int get ranValue => _ranValue;
   Color get gridButtonColor => _gridButtonColor;
-  // Widget get 
+  // Widget get
   void updateAutoPlay(bool val) {
     _autoPlay = val;
     print("value of auto play ${_autoPlay} ");
@@ -61,10 +61,12 @@ class AppState extends ChangeNotifier {
     _updateWidget = val;
     if (_updateWidget) {
       // _updateWidget = val;
+      notifyListeners();
       return CircularProgressIndicator();
     } else {
       var random = Random();
       int ran = random.nextInt(5);
+      notifyListeners();
       return Text(
         "${ran + 1}",
         style: TextStyle(fontSize: 32, color: Colors.grey),
