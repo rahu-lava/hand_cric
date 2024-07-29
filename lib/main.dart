@@ -36,49 +36,52 @@ class MyApp extends StatelessWidget {
 }
 
 class AppState extends ChangeNotifier {
-  bool _autoPlay = false;
+  bool _autoPlay = true;
   bool _updateWidget = false;
   late int _ranValue;
   Color _gridButtonColor = Colors.blue;
 
   bool get autoPlay => _autoPlay;
+  bool get updateWidget => _updateWidget;
   int get ranValue => _ranValue;
   Color get gridButtonColor => _gridButtonColor;
+
   // Widget get
   void updateAutoPlay(bool val) {
     _autoPlay = val;
-    print("value of auto play ${_autoPlay} ");
+    //print("value of auto play ${_autoPlay} ");
     notifyListeners();
   }
 
   void updateRanValue(int val) {
     _ranValue = val;
-    print("value of auto play ${_ranValue} ");
+    //print("value of auto play ${_ranValue} ");
     notifyListeners();
   }
+  // bool
 
-  Widget updateWidget({bool val = true}) {
-    _updateWidget = val;
-    if (_updateWidget) {
-      // _updateWidget = val;
-      notifyListeners();
-      return CircularProgressIndicator();
-    } else {
-      var random = Random();
-      int ran = random.nextInt(5);
-      notifyListeners();
-      return Text(
-        "${ran + 1}",
-        style: TextStyle(fontSize: 32, color: Colors.grey),
-      );
-    }
-  }
+  // Widget updateWidget({bool val = true}) {
+  //   _updateWidget = val;
+  //   if (_updateWidget) {
+  //     // _updateWidget = val;
+  //     notifyListeners();
+  //     return CircularProgressIndicator();
+  //   } else {
+  //     var random = Random();
+  //     int ran = random.nextInt(5);
+  //     notifyListeners();
+  //     return Text(
+  //       "${ran + 1}",
+  //       style: TextStyle(fontSize: 32, color: Colors.grey),
+  //     );
+  //   }
+  // }
 
   void updateGridButtonColor() {
     _gridButtonColor = _gridButtonColor == Colors.blue
         ? Colors.yellow
         : Colors.blue; // Toggle color
-    print("value of auto play ${_gridButtonColor} ");
+    //print("value of auto play ${_gridButtonColor} ");
     notifyListeners();
   }
 }

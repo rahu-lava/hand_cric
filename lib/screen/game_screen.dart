@@ -19,6 +19,8 @@ class _GameScreenState extends State<GameScreen> {
   int clickedValue = 0;
   late int botValue, currentScore = 0;
   Widget _currentWidget = const CircularProgressIndicator();
+  Widget loadingWidget = const CircularProgressIndicator();
+  // Widget TextWidget = const
 
   void _changeButtonColor(int index) {
     setState(() {
@@ -26,13 +28,29 @@ class _GameScreenState extends State<GameScreen> {
       _buttonColors = List<Color>.filled(6, Colors.blue);
       // Set the clicked button to yellow
       _buttonColors[index] = Colors.yellow;
+      print("hey there");
       clickedValue = index + 1;
+    });
+    Provider.of<AppState>(context, listen: false).updateAutoPlay(false);
+  }
+
+  void _resetWidget() {
+    setState(() {
+      _currentWidget = CircularProgressIndicator();
+    });
+  }
+
+  void _resetButtonColor() {
+    setState(() {
+      _buttonColors = List<Color>.filled(6, Colors.blue);
+      // _resetWidget();
     });
   }
 
   void _updateWidget() {
     var random = Random();
     botValue = random.nextInt(6) + 1;
+    //print("The random value:${botValue}");
     setState(() {
       _currentWidget = Text(
         '${botValue}',
@@ -41,8 +59,18 @@ class _GameScreenState extends State<GameScreen> {
       currentScore = (botValue == clickedValue)
           ? currentScore
           : currentScore + clickedValue;
-      // ResetWidgets();
+      _resetButtonColor();
     });
+  }
+
+  Widget textWidget() {
+    var ran = Random();
+    botValue = ran.nextInt(6) + 1;
+
+    return Text(
+      '${botValue}',
+      style: TextStyle(fontSize: 24, color: Colors.green),
+    );
   }
 
   @override
@@ -81,6 +109,10 @@ class _GameScreenState extends State<GameScreen> {
                 height: 20,
               ),
               _currentWidget,
+              // Consumer<AppState>(builder: (context, appstate, child) {
+              //   return (appstate.updateWidget) ? loadingWidget : textWidget();
+              // }),
+              // _currentWidget,
               // const CircularProgressIndicator(),
               // Provider.of<AppState>(context, listen: false).updateWidget(),
               const SizedBox(height: 25),
@@ -126,6 +158,8 @@ class _GameScreenState extends State<GameScreen> {
         ),
         WaitingIndicator(
           onUpdate: _updateWidget,
+          OnRandomCall: _changeButtonColor,
+          updateWidget: _resetWidget,
         ),
         SizedBox(
           height: 4,
