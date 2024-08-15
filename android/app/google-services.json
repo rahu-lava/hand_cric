@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "584267922329",
+    "firebase_url": "https://hand-cric-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "hand-cric",
+    "storage_bucket": "hand-cric.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:584267922329:android:d31a6769b825ffeaf6b108",
+        "android_client_info": {
+          "package_name": "com.example.hand_cric"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTgZShaFJxLZejO3OH02NVT3uKk9H6txA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

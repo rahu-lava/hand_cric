@@ -1,15 +1,23 @@
 import 'dart:math';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hand_cric/firebase_options.dart';
 import 'package:hand_cric/screen/choose_screen.dart';
 import 'package:provider/provider.dart';
 
-void main() => runApp(
-      ChangeNotifierProvider(
-        create: (context) => AppState(),
-        child: MyApp(),
-      ),
-    );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AppState(),
+      child: MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

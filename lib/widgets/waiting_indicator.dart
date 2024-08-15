@@ -82,7 +82,7 @@ class _WaitingIndicatorState extends State<WaitingIndicator>
     });
   }
 
-  void setRandomValue() {
+  void  setRandomValue() {
     var random = Random();
     if (Provider.of<AppState>(context, listen: false).autoPlay) {
       //Auto Play needed..
