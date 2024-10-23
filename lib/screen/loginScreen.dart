@@ -1,10 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
-import 'package:hand_cric/screen/SetUserName.dart';
+import 'package:flutter/services.dart';
+import 'package:hand_cric/main.dart';
 import 'package:hand_cric/screen/coinTossPage.dart';
+import 'package:hand_cric/screen/online_menu.dart';
 import 'package:hand_cric/widgets/NumericTextField.dart';
 import 'package:hand_cric/widgets/OtpField.dart';
+import 'package:appwrite/appwrite.dart' as ap;
+import 'package:provider/provider.dart';
+
+late ap.Client client;
+late ap.Account account;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,77 +21,73 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _textEditingController = TextEditingController();
-  final TextEditingController _otpEditingController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+
+  late TextEditingController otpController;
   bool isOtpSend = false;
   bool isLoading = false; // State to manage loading
-  String _verificationId = '';
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  late bool isLoggedIn;
+  late bool isNameSet;
 
   @override
   Widget build(BuildContext context) {
-    print(_auth);
+    AppState appState = Provider.of<AppState>(context, listen: false);
+    account = appState.account; // Access the account
+    client = appState.client; // Access the client if needed
+    isLoggedIn = appState.isLogged;
+    // isNameSet = appState.isNameSet;
+
+    alreadySignedIn();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login"),
+        title: const Text("Login"),
       ),
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Visibility(
-                visible: !isOtpSend,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 175,
-                      padding: EdgeInsets.symmetric(horizontal: 7),
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.grey),
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                      ),
-                      child: NumericTextField(
-                        hint: "Enter Mobile Number",
-                        controller: _textEditingController,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    isLoading
-                        ? CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                isLoading = true; // Show loading indicator
-                              });
-                              sendOTP("+91" + _textEditingController.text);
-                            },
-                            child: Text("Send OTP"),
-                          ),
-                  ],
+              // Container(
+              //   width: 175,
+              //   padding: const EdgeInsets.symmetric(horizontal: 7),
+              //   decoration: BoxDecoration(
+              //     border: Border.all(width: 1, color: Colors.grey),
+              //     borderRadius: const BorderRadius.all(Radius.circular(15)),
+              //   ),
+              //   child: TextFormField(
+              //     controller: usernameController,
+              //     keyboardType: TextInputType.text,
+              //     decoration: InputDecoration(
+              //         hintText: "Username", border: InputBorder.none),
+              //     inputFormatters: [LengthLimitingTextInputFormatter(10)],
+              //   ),
+              // ),
+              // SizedBox(height: 35),
+              Container(
+                width: 175,
+                padding: const EdgeInsets.symmetric(horizontal: 7),
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1, color: Colors.grey),
+                  borderRadius: const BorderRadius.all(Radius.circular(15)),
+                ),
+                child: NumericTextField(
+                  hint: "Enter Mobile Number",
+                  controller: _textEditingController,
                 ),
               ),
-              Visibility(
-                visible: isOtpSend,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                        width: 175,
-                        child: OtpField(controller: _otpEditingController)),
-                    SizedBox(height: 15),
-                    ElevatedButton(
+              const SizedBox(height: 20),
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
                       onPressed: () {
-                        verifyOTP(_verificationId, _otpEditingController.text);
+                        setState(() {
+                          isLoading = true; // Show loading indicator
+                        });
+                        sendOTP("+91${_textEditingController.text}");
                       },
-                      child: Text("Verify OTP"),
-                    ),
-                  ],
-                ),
-              ),
+                      child: const Text("Send OTP"),
+                    )
             ],
           ),
         ),
@@ -94,65 +96,127 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> sendOTP(String phoneNumber) async {
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Handle auto-verification
-          await _auth.signInWithCredential(credential);
-          setState(() {
-            print(
-                'Phone number automatically verified and user signed in: ${_auth.currentUser?.uid}');
-          });
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          // Handle verification errors
-          setState(() {
-            isLoading = false; // Stop loading
-            print(
-                'Phone number verification failed. Code: ${e.code}. Message: ${e.message}');
-          });
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          // Handle OTP sent
-          setState(() {
-            isLoading = false; // Stop loading
-            isOtpSend = true; // Show OTP input
-            _verificationId = verificationId;
-            print("OTP Sent!");
-          });
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          setState(() {
-            _verificationId = verificationId;
-          });
-        },
-        timeout: Duration(seconds: 60),
-      );
-    } catch (e) {
-      setState(() {
-        isLoading = false; // Stop loading
-        print("Error occurred while sending OTP: $e");
-      });
+    if ((usernameController.text.isNotEmpty &&
+            usernameController.text.length <= 10) &&
+        (_textEditingController.text.isNotEmpty &&
+            _textEditingController.text.length == 10)) {
+      try {
+        final token = await account.createPhoneToken(
+            userId: ap.ID.unique(), phone: phoneNumber);
+        final userId = token.userId;
+        if (userId != null) {
+          otpLikho(context, account, userId);
+        }
+      } catch (e) {
+        setState(() {
+          isLoading = false; // Stop loading
+          print("Error occurred while sending OTP: $e");
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please enter a valid input'),
+        backgroundColor:
+            Colors.red, // Optional: Set background color for the Snackbar
+      ));
     }
   }
 
-  Future<void> verifyOTP(String verificationId, String otp) async {
+  Future<bool> checkSession(ap.Account account) async {
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: otp,
-      );
-      await _auth.signInWithCredential(credential);
-      setState(() {
-        print('Successfully signed in UID: ${_auth.currentUser?.uid}');
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => SetUserName()));
-      });
+      User result = await account.get();
+      print('User is logged in: ${result.name}');
+      return true;
     } catch (e) {
-      setState(() {
-        print("Error occurred while verifying OTP: $e");
-      });
+      print('No active session: $e');
+      return false;
+    }
+  }
+
+  Future<String?> otpLikho(
+      BuildContext context, ap.Account account, String userId) async {
+    otpController = TextEditingController();
+    print("me yeha hun");
+
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false, // Prevents dialog from closing on tap outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter OTP'),
+          content: TextField(
+            controller: otpController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: const InputDecoration(
+              hintText: 'Enter 6-digit OTP',
+              counterText: '', // Hide character counter
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                String enteredOtp = otpController.text;
+                if (enteredOtp.length == 6) {
+                  validateOtp(account, userId);
+                  Navigator.of(context)
+                      .pop(enteredOtp); // Return the entered OTP
+                } else {
+                  // Show error if OTP is not 6 digits
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a 6-digit OTP')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  validateOtp(ap.Account account, String userId) async {
+    String otpSecret = otpController.text;
+    try {
+      await account.createSession(userId: userId, secret: otpSecret);
+      setUsername();
+
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const OnlineMenu()));
+    } catch (e) {
+      print("Error here is:" + e.toString());
+    }
+  }
+
+  void alreadySignedIn() async {
+    try {
+      User user = await account.get();
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const OnlineMenu()));
+      // _isLogged = true;
+      print('User is logged in: ${user.name}');
+    } catch (e) {
+      // _isLogged = false;
+      print('No active session: $e');
+    }
+  }
+
+  void setUsername() async {
+    if (usernameController.text.isNotEmpty) {
+      try {
+        final response =
+            await account.updateName(name: usernameController.text);
+        print('User name updated: ${response.name}');
+      } catch (error) {
+        print('Error updating user name: $error');
+      }
     }
   }
 }

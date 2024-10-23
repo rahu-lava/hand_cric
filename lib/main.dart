@@ -1,16 +1,10 @@
-import 'dart:math';
-
-import 'package:firebase_core/firebase_core.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
-import 'package:hand_cric/firebase_options.dart';
 import 'package:hand_cric/screen/choose_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   runApp(
     ChangeNotifierProvider(
       create: (context) => AppState(),
@@ -23,19 +17,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    AppState();
     return MaterialApp(
       title: 'Hand Cricket',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const ChooseScreen(),
@@ -49,47 +35,59 @@ class AppState extends ChangeNotifier {
   late int _ranValue;
   Color _gridButtonColor = Colors.blue;
 
+  late Client _client;
+  late Account _account;
+  bool _isLogged = false;
+  // bool _isNameSet = false;
+
   bool get autoPlay => _autoPlay;
   bool get updateWidget => _updateWidget;
   int get ranValue => _ranValue;
   Color get gridButtonColor => _gridButtonColor;
 
+  Account get account => _account; // Expose Account as a getter
+  Client get client => _client; // Expose Client as a getter
+  bool get isLogged => _isLogged;
+  // bool get isNameSet => _isNameSet;
+
+  AppState() {
+    _client = Client();
+    _client
+        .setEndpoint('https://cloud.appwrite.io/v1')
+        .setProject('66d89345003b33f673b0')
+        .setSelfSigned(status: true);
+
+    _account = Account(_client);
+    print("hey there");
+    isLoggedIn();
+  }
+
+  Future<void> isLoggedIn() async {
+    try {
+      User user = await account.get();
+      _isLogged = true;
+      print('User is logged in: ${user.name}');
+    } catch (e) {
+      _isLogged = false;
+      print('No active session: $e');
+    }
+  }
+
   // Widget get
   void updateAutoPlay(bool val) {
     _autoPlay = val;
-    //print("value of auto play ${_autoPlay} ");
     notifyListeners();
   }
 
   void updateRanValue(int val) {
     _ranValue = val;
-    //print("value of auto play ${_ranValue} ");
     notifyListeners();
   }
-  // bool
-
-  // Widget updateWidget({bool val = true}) {
-  //   _updateWidget = val;
-  //   if (_updateWidget) {
-  //     // _updateWidget = val;
-  //     notifyListeners();
-  //     return CircularProgressIndicator();
-  //   } else {
-  //     var random = Random();
-  //     int ran = random.nextInt(5);
-  //     notifyListeners();
-  //     return Text(
-  //       "${ran + 1}",
-  //       style: TextStyle(fontSize: 32, color: Colors.grey),
-  //     );
-  //   }
-  // }
 
   void updateGridButtonColor() {
     _gridButtonColor = _gridButtonColor == Colors.blue
         ? Colors.yellow
         : Colors.blue; // Toggle color
-    //print("value of auto play ${_gridButtonColor} ");
     notifyListeners();
   }
 }
